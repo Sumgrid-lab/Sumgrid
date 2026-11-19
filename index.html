@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SumGrid — Jeu de logique 4x4</title>
+  <title>SumGrid — Progression & Logique</title>
   <style>
     :root {
       --bg-main: #0b1120;
       --bg-card: #131c31;
-      --bg-cell: #19243e;
       --bg-cell-hover: #223052;
       --border-subtle: rgba(148, 163, 184, 0.22);
       --text-main: #f8fafc;
@@ -19,7 +18,6 @@
       --accent-amber: #fbbf24;
       --accent-rose: #fb7185;
       --danger: #ef4444;
-      --success: #10b981;
     }
 
     * {
@@ -45,10 +43,9 @@
       max-width: 440px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
-    /* En-tête */
     header {
       display: flex;
       justify-content: space-between;
@@ -76,7 +73,7 @@
     }
 
     h1 {
-      font-size: 1.35rem;
+      font-size: 1.3rem;
       font-weight: 800;
       letter-spacing: -0.02em;
     }
@@ -86,16 +83,31 @@
       color: var(--text-muted);
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .coins-pill {
+      background: rgba(251, 191, 36, 0.14);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: var(--accent-amber);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
     .btn-icon {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
-      padding: 8px 12px;
+      padding: 7px 11px;
       border-radius: 10px;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
     }
 
     .btn-icon:hover {
@@ -103,7 +115,27 @@
       border-color: var(--accent-cyan);
     }
 
-    /* Barre de statistiques */
+    .level-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .level-tag {
+      font-weight: 800;
+      color: var(--accent-purple);
+    }
+
+    .goal-text {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -126,14 +158,12 @@
       font-size: 1.05rem;
       font-weight: 700;
       margin-top: 2px;
-      color: var(--text-main);
     }
 
     .stat-value.highlight {
       color: var(--accent-cyan);
     }
 
-    /* Grille 4x4 */
     .board-wrapper {
       background: var(--bg-card);
       padding: 12px;
@@ -161,56 +191,41 @@
       font-weight: 800;
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.12s ease, transform 0.08s ease;
       border-right: 1px dashed rgba(148, 163, 184, 0.25);
       border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
     }
 
-    .cell:nth-child(4n) {
-      border-right: none;
-    }
+    .cell:nth-child(4n) { border-right: none; }
+    .cell:nth-child(n + 13) { border-bottom: none; }
 
-    .cell:nth-child(n + 13) {
-      border-bottom: none;
-    }
-
-    /* Bordures épaisses entre différentes cages */
     .cage-top { border-top: 2.5px solid #cbd5e1 !important; }
     .cage-bottom { border-bottom: 2.5px solid #cbd5e1 !important; }
     .cage-left { border-left: 2.5px solid #cbd5e1 !important; }
     .cage-right { border-right: 2.5px solid #cbd5e1 !important; }
 
-    /* Indice mathématique de la cage */
     .cage-clue {
       position: absolute;
       top: 5px;
       left: 7px;
       font-size: 0.74rem;
       font-weight: 800;
-      letter-spacing: 0.02em;
       padding: 1px 5px;
       border-radius: 5px;
       background: rgba(15, 23, 42, 0.72);
       pointer-events: none;
     }
 
-    /* Touches colorées par cage */
     .theme-0 { background-color: rgba(56, 189, 248, 0.11); }
     .theme-0 .cage-clue { color: #7dd3fc; }
-
     .theme-1 { background-color: rgba(167, 139, 250, 0.12); }
     .theme-1 .cage-clue { color: #c4b5fd; }
-
     .theme-2 { background-color: rgba(52, 211, 153, 0.11); }
     .theme-2 .cage-clue { color: #6ee7b7; }
-
     .theme-3 { background-color: rgba(251, 191, 36, 0.11); }
     .theme-3 .cage-clue { color: #fcd34d; }
-
     .theme-4 { background-color: rgba(251, 113, 133, 0.12); }
     .theme-4 .cage-clue { color: #fda4af; }
 
-    /* États de sélection et validation */
     .cell.related {
       box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.04);
     }
@@ -221,9 +236,7 @@
       z-index: 2;
     }
 
-    .cell.fixed {
-      color: var(--accent-emerald);
-    }
+    .cell.fixed { color: var(--accent-emerald); }
 
     .cell.error {
       color: var(--danger);
@@ -235,7 +248,6 @@
       color: #6ee7b7;
     }
 
-    /* Pavé numérique */
     .numpad {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -251,7 +263,6 @@
       font-size: 1.25rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.08s, background 0.15s, border-color 0.15s;
     }
 
     .num-btn:hover {
@@ -259,16 +270,9 @@
       border-color: var(--accent-cyan);
     }
 
-    .num-btn:active {
-      transform: scale(0.95);
-    }
+    .num-btn:active { transform: scale(0.95); }
+    .num-btn.erase { font-size: 0.9rem; color: var(--accent-rose); }
 
-    .num-btn.erase {
-      font-size: 0.9rem;
-      color: var(--accent-rose);
-    }
-
-    /* Boutons d'action */
     .actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -282,9 +286,8 @@
       background: var(--bg-card);
       color: var(--text-main);
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       cursor: pointer;
-      transition: all 0.15s;
     }
 
     .action-btn:hover:not(:disabled) {
@@ -303,19 +306,13 @@
       color: #fff;
     }
 
-    .action-btn.primary:hover {
-      filter: brightness(1.1);
-    }
-
-    /* Message de statut */
     .status-msg {
       text-align: center;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       min-height: 20px;
       color: var(--text-muted);
     }
 
-    /* Modales (Règles & Victoire) */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -328,9 +325,7 @@
       z-index: 50;
     }
 
-    .modal-backdrop.open {
-      display: flex;
-    }
+    .modal-backdrop.open { display: flex; }
 
     .modal {
       background: var(--bg-card);
@@ -339,29 +334,14 @@
       max-width: 390px;
       width: 100%;
       padding: 22px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
-    .modal h2 {
-      font-size: 1.25rem;
-      color: var(--accent-cyan);
-    }
-
-    .modal p, .modal li {
-      font-size: 0.9rem;
-      line-height: 1.5;
-      color: #cbd5e1;
-    }
-
-    .modal ul {
-      padding-left: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .modal h2 { font-size: 1.25rem; color: var(--accent-cyan); }
+    .modal p, .modal li { font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; }
+    .modal ul { padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
 
     .victory-stats {
       background: rgba(15, 23, 42, 0.7);
@@ -380,11 +360,19 @@
         <div class="logo-badge">4×</div>
         <div>
           <h1>SumGrid</h1>
-          <div class="subtitle">Logique & Calcul • 4×4</div>
+          <div class="subtitle">Progression • Logique 4×4</div>
         </div>
       </div>
-      <button class="btn-icon" id="btnRules">Règles</button>
+      <div class="header-right">
+        <div class="coins-pill" id="coinsDisplay">🪙 0</div>
+        <button class="btn-icon" id="btnRules">Règles</button>
+      </div>
     </header>
+
+    <div class="level-banner">
+      <div><span class="level-tag" id="levelDisplay">Niveau 1</span></div>
+      <div class="goal-text" id="goalDisplay">Objectif : &lt; 02:00</div>
+    </div>
 
     <div class="stats-bar">
       <div>
@@ -427,8 +415,9 @@
       <h2>Comment jouer à SumGrid ?</h2>
       <ul>
         <li>Remplissez chaque case avec un chiffre de <strong>1 à 4</strong>.</li>
-        <li><strong>Lignes et colonnes :</strong> chaque chiffre ne doit apparaître qu'une seule fois par ligne et par colonne.</li>
-        <li><strong>Zones colorées (cages) :</strong> les chiffres d'une même zone doivent produire le résultat indiqué en haut à gauche (ex. <code>7+</code> = somme égale à 7, <code>6×</code> = produit égal à 6, <code>2-</code> = différence de 2, <code>2÷</code> = quotient de 2).</li>
+        <li><strong>Lignes et colonnes :</strong> un seul exemplaire de chaque chiffre par ligne et colonne.</li>
+        <li><strong>Cages :</strong> respectez l'opération indiquée (<code>+</code> somme, <code>×</code> produit, <code>-</code> différence, <code>÷</code> quotient).</li>
+        <li><strong>Progression :</strong> terminez la grille dans le temps objectif pour gagner plus de pièces et monter de niveau.</li>
       </ul>
       <button class="action-btn primary" id="closeRules">Compris, jouer !</button>
     </div>
@@ -438,24 +427,37 @@
   <div class="modal-backdrop" id="victoryModal">
     <div class="modal">
       <h2 style="color: var(--accent-emerald);">Grille résolue !</h2>
-      <p id="victorySubtitle">Bravo, votre logique est implacable.</p>
+      <p id="victorySubtitle">Bravo !</p>
       <div class="victory-stats">
         <div>
-          <div class="stat-label">Temps final</div>
+          <div class="stat-label">Temps</div>
           <div class="stat-value highlight" id="finalTime">00:00</div>
         </div>
         <div>
-          <div class="stat-label">Coups joués</div>
-          <div class="stat-value" id="finalMoves">0</div>
+          <div class="stat-label">Gain</div>
+          <div class="stat-value" id="finalReward" style="color: var(--accent-amber);">+10 🪙</div>
         </div>
       </div>
       <button class="action-btn" id="btnShare">Copier mon score</button>
-      <button class="action-btn primary" id="btnPlayAgain">Nouvelle grille</button>
+      <button class="action-btn primary" id="btnPlayAgain">Niveau suivant</button>
     </div>
   </div>
 
   <script>
     const SIZE = 4;
+
+    // Pont optionnel vers une application Android (WebView / Capacitor) pour Google AdMob
+    window.AdMobBridge = window.AdMobBridge || {
+      showInterstitial: function () {
+        // À connecter côté Android (ex: AndroidInterface.showInterstitial())
+      },
+      showRewardedForHint: function (onRewardGranted) {
+        // À connecter côté Android pour récompenser le joueur après une pub vidéo
+        // En mode test sans pub native, on accorde l'indice directement :
+        if (typeof onRewardGranted === "function") onRewardGranted();
+      }
+    };
+
     let solution = [];
     let userGrid = [];
     let fixedCells = [];
@@ -468,12 +470,31 @@
     let timerInterval = null;
     let gameWon = false;
 
+    let currentLevel = Number(localStorage.getItem("sumgrid_level") || "1");
+    let coins = Number(localStorage.getItem("sumgrid_coins") || "0");
+
     const gridEl = document.getElementById("grid");
     const timerEl = document.getElementById("timerDisplay");
     const movesEl = document.getElementById("movesDisplay");
     const bestEl = document.getElementById("bestDisplay");
+    const levelEl = document.getElementById("levelDisplay");
+    const goalEl = document.getElementById("goalDisplay");
+    const coinsEl = document.getElementById("coinsDisplay");
     const statusEl = document.getElementById("statusMsg");
     const btnHint = document.getElementById("btnHint");
+
+    function getTargetSecondsForLevel(lvl) {
+      // Temps objectif qui devient plus exigeant au fil des niveaux (minimum 45s)
+      return Math.max(45, 130 - (lvl - 1) * 7);
+    }
+
+    function updateProgressUI() {
+      levelEl.textContent = `Niveau ${currentLevel}`;
+      goalEl.textContent = `Objectif : < ${formatTime(getTargetSecondsForLevel(currentLevel))}`;
+      coinsEl.textContent = `🪙 ${coins}`;
+      localStorage.setItem("sumgrid_level", String(currentLevel));
+      localStorage.setItem("sumgrid_coins", String(coins));
+    }
 
     function formatTime(sec) {
       const m = String(Math.floor(sec / 60)).padStart(2, "0");
@@ -495,7 +516,6 @@
       return copy;
     }
 
-    // Génère un carré latin 4x4 valide aléatoire
     function generateSolution() {
       const base = [
         [1, 2, 3, 4],
@@ -517,18 +537,11 @@
       return board;
     }
 
-    // Découpe la grille en cages de 1 à 3 cases et calcule l'indice
     function generateCages(board) {
       const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
       const newCages = [];
       const map = Array.from({ length: SIZE }, () => Array(SIZE).fill(-1));
-
-      const dirs = [
-        [1, 0],
-        [-1, 0],
-        [0, 1],
-        [0, -1]
-      ];
+      const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
@@ -536,7 +549,7 @@
 
           const cells = [{ r, c }];
           visited[r][c] = true;
-          const targetSize = Math.random() < 0.15 ? 1 : (Math.random() < 0.7 ? 2 : 3);
+          const targetSize = Math.random() < 0.12 ? 1 : (Math.random() < 0.65 ? 2 : 3);
 
           while (cells.length < targetSize) {
             const candidates = [];
@@ -555,15 +568,12 @@
             cells.push(pick);
           }
 
-          // Trier les cellules pour placer l'indice en haut à gauche de la cage
           cells.sort((a, b) => (a.r - b.r) || (a.c - b.c));
           const values = cells.map(cell => board[cell.r][cell.c]);
           const clueObj = buildClue(values);
 
           const cageIndex = newCages.length;
-          cells.forEach(cell => {
-            map[cell.r][cell.c] = cageIndex;
-          });
+          cells.forEach(cell => { map[cell.r][cell.c] = cageIndex; });
 
           newCages.push({
             id: cageIndex,
@@ -575,7 +585,6 @@
           });
         }
       }
-
       return { newCages, map };
     }
 
@@ -606,7 +615,6 @@
     function isCageSatisfied(cage) {
       const vals = cage.cells.map(cell => userGrid[cell.r][cell.c]);
       if (vals.some(v => v === 0)) return false;
-
       if (cage.op === "=") return vals[0] === cage.target;
       if (cage.op === "+") return vals.reduce((a, b) => a + b, 0) === cage.target;
       if (cage.op === "×") return vals.reduce((a, b) => a * b, 1) === cage.target;
@@ -638,13 +646,11 @@
           const cage = cages[cageIdx];
           cellDiv.className = `cell theme-${cage.theme}`;
 
-          // Bordures de cage
           if (r === 0 || cellToCage[r - 1][c] !== cageIdx) cellDiv.classList.add("cage-top");
           if (r === SIZE - 1 || cellToCage[r + 1][c] !== cageIdx) cellDiv.classList.add("cage-bottom");
           if (c === 0 || cellToCage[r][c - 1] !== cageIdx) cellDiv.classList.add("cage-left");
           if (c === SIZE - 1 || cellToCage[r][c + 1] !== cageIdx) cellDiv.classList.add("cage-right");
 
-          // Indice dans la première cellule de la cage
           if (cage.cells[0].r === r && cage.cells[0].c === c) {
             const clueSpan = document.createElement("span");
             clueSpan.className = "cage-clue";
@@ -652,29 +658,14 @@
             cellDiv.appendChild(clueSpan);
           }
 
-          if (isCageSatisfied(cage)) {
-            cellDiv.classList.add("cage-solved");
-          }
-
-          if (r === selected.r && c === selected.c) {
-            cellDiv.classList.add("selected");
-          } else if (r === selected.r || c === selected.c) {
-            cellDiv.classList.add("related");
-          }
-
-          if (fixedCells[r][c]) {
-            cellDiv.classList.add("fixed");
-          }
-
-          if (hasLineOrColDuplicate(r, c)) {
-            cellDiv.classList.add("error");
-          }
+          if (isCageSatisfied(cage)) cellDiv.classList.add("cage-solved");
+          if (r === selected.r && c === selected.c) cellDiv.classList.add("selected");
+          else if (r === selected.r || c === selected.c) cellDiv.classList.add("related");
+          if (fixedCells[r][c]) cellDiv.classList.add("fixed");
+          if (hasLineOrColDuplicate(r, c)) cellDiv.classList.add("error");
 
           const val = userGrid[r][c];
-          if (val !== 0) {
-            const valNode = document.createTextNode(val);
-            cellDiv.appendChild(valNode);
-          }
+          if (val !== 0) cellDiv.appendChild(document.createTextNode(val));
 
           cellDiv.addEventListener("click", () => {
             selected = { r, c };
@@ -690,7 +681,7 @@
       if (gameWon) return;
       const { r, c } = selected;
       if (fixedCells[r][c]) {
-        statusEl.textContent = "Cette case est verrouillée par un indice.";
+        statusEl.textContent = "Cette case est verrouillée.";
         return;
       }
       if (userGrid[r][c] !== num) {
@@ -704,7 +695,6 @@
     }
 
     function checkVictory() {
-      // Vérifie que toutes les cases sont remplies, sans doublons, et toutes les cages valides
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
           if (userGrid[r][c] === 0 || hasLineOrColDuplicate(r, c)) return;
@@ -716,27 +706,41 @@
       clearInterval(timerInterval);
 
       const prevBest = localStorage.getItem("sumgrid_4x4_best");
-      let subtitle = "Bravo, votre logique est implacable.";
       if (!prevBest || seconds < Number(prevBest)) {
         localStorage.setItem("sumgrid_4x4_best", String(seconds));
         loadBestTime();
-        subtitle = "Nouveau record personnel !";
       }
+
+      const targetSec = getTargetSecondsForLevel(currentLevel);
+      const beatGoal = seconds <= targetSec;
+      const earned = beatGoal ? 15 : 8;
+      coins += earned;
+
+      let subtitle = beatGoal
+        ? `Objectif réussi ! Passage au niveau ${currentLevel + 1}.`
+        : `Grille validée ! Finissez sous ${formatTime(targetSec)} pour monter de niveau.`;
+
+      if (beatGoal) {
+        currentLevel++;
+      }
+      updateProgressUI();
 
       document.getElementById("victorySubtitle").textContent = subtitle;
       document.getElementById("finalTime").textContent = formatTime(seconds);
-      document.getElementById("finalMoves").textContent = moves;
+      document.getElementById("finalReward").textContent = `+${earned} 🪙`;
       document.getElementById("victoryModal").classList.add("open");
+
+      // Déclenche une interstitielle uniquement si le joueur a déjà fait quelques niveaux
+      if (currentLevel > 2) {
+        window.AdMobBridge.showInterstitial();
+      }
     }
 
-    function useHint() {
-      if (gameWon || hintsLeft <= 0) return;
+    function applyHintToBoard() {
       const candidates = [];
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
-          if (userGrid[r][c] !== solution[r][c]) {
-            candidates.push({ r, c });
-          }
+          if (userGrid[r][c] !== solution[r][c]) candidates.push({ r, c });
         }
       }
       if (candidates.length === 0) return;
@@ -744,12 +748,29 @@
       userGrid[pick.r][pick.c] = solution[pick.r][pick.c];
       fixedCells[pick.r][pick.c] = true;
       selected = { r: pick.r, c: pick.c };
-      hintsLeft--;
-      btnHint.textContent = `Indice (${hintsLeft})`;
-      if (hintsLeft === 0) btnHint.disabled = true;
       statusEl.textContent = "Indice appliqué !";
       renderGrid();
       checkVictory();
+    }
+
+    function useHint() {
+      if (gameWon) return;
+      if (hintsLeft > 0) {
+        hintsLeft--;
+        btnHint.textContent = hintsLeft > 0 ? `Indice (${hintsLeft})` : "Indice (+🪙 / Pub)";
+        applyHintToBoard();
+        return;
+      }
+      // Option d'achat avec pièces ou récompense
+      if (coins >= 10) {
+        coins -= 10;
+        updateProgressUI();
+        applyHintToBoard();
+      } else {
+        window.AdMobBridge.showRewardedForHint(() => {
+          applyHintToBoard();
+        });
+      }
     }
 
     function startNewGame() {
@@ -762,7 +783,6 @@
       cages = generated.newCages;
       cellToCage = generated.map;
 
-      // Pré-remplit automatiquement les cages d'une seule case pour un démarrage fluide
       cages.forEach(cage => {
         if (cage.cells.length === 1) {
           const { r, c } = cage.cells[0];
@@ -783,6 +803,7 @@
       btnHint.disabled = false;
       statusEl.textContent = "Sélectionnez une case et placez les chiffres 1 à 4.";
       document.getElementById("victoryModal").classList.remove("open");
+      updateProgressUI();
 
       renderGrid();
       timerInterval = setInterval(() => {
@@ -791,7 +812,6 @@
       }, 1000);
     }
 
-    // Événements pavé numérique et boutons
     document.querySelectorAll(".num-btn[data-num]").forEach(btn => {
       btn.addEventListener("click", () => setCellValue(Number(btn.dataset.num)));
     });
@@ -800,7 +820,6 @@
     document.getElementById("btnNew").addEventListener("click", startNewGame);
     document.getElementById("btnPlayAgain").addEventListener("click", startNewGame);
 
-    // Modale règles
     document.getElementById("btnRules").addEventListener("click", () => {
       document.getElementById("rulesModal").classList.add("open");
     });
@@ -808,9 +827,8 @@
       document.getElementById("rulesModal").classList.remove("open");
     });
 
-    // Partage du score
     document.getElementById("btnShare").addEventListener("click", async () => {
-      const text = `SumGrid 4×4 résolu en ${formatTime(seconds)} (${moves} coups) !`;
+      const text = `SumGrid Niveau ${currentLevel - 1} résolu en ${formatTime(seconds)} !`;
       try {
         await navigator.clipboard.writeText(text);
         document.getElementById("btnShare").textContent = "Score copié !";
@@ -822,28 +840,17 @@
       }
     });
 
-    // Contrôles clavier
     document.addEventListener("keydown", e => {
-      if (["1", "2", "3", "4"].includes(e.key)) {
-        setCellValue(Number(e.key));
-      } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
-        setCellValue(0);
-      } else if (e.key === "ArrowUp") {
-        selected.r = (selected.r + SIZE - 1) % SIZE;
-        renderGrid();
-      } else if (e.key === "ArrowDown") {
-        selected.r = (selected.r + 1) % SIZE;
-        renderGrid();
-      } else if (e.key === "ArrowLeft") {
-        selected.c = (selected.c + SIZE - 1) % SIZE;
-        renderGrid();
-      } else if (e.key === "ArrowRight") {
-        selected.c = (selected.c + 1) % SIZE;
-        renderGrid();
-      }
+      if (["1", "2", "3", "4"].includes(e.key)) setCellValue(Number(e.key));
+      else if (["Backspace", "Delete", "0"].includes(e.key)) setCellValue(0);
+      else if (e.key === "ArrowUp") { selected.r = (selected.r + SIZE - 1) % SIZE; renderGrid(); }
+      else if (e.key === "ArrowDown") { selected.r = (selected.r + 1) % SIZE; renderGrid(); }
+      else if (e.key === "ArrowLeft") { selected.c = (selected.c + SIZE - 1) % SIZE; renderGrid(); }
+      else if (e.key === "ArrowRight") { selected.c = (selected.c + 1) % SIZE; renderGrid(); }
     });
 
     loadBestTime();
+    updateProgressUI();
     startNewGame();
   </script>
 </body>
