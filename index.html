@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SumGrid — Jeu de logique 4x4</title>
+  <style>
+    :root {
+      --bg-main: #0b1120;
+      --bg-card: #131c31;
+      --bg-cell: #19243e;
+      --bg-cell-hover: #223052;
+      --border-subtle: rgba(148, 163, 184, 0.22);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-purple: #a78bfa;
+      --accent-emerald: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #16223f 0%, var(--bg-main) 65%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* En-tête */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #0b1120;
+      font-size: 1.05rem;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-cell-hover);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Barre de statistiques */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 2px;
+      color: var(--text-main);
+    }
+
+    .stat-value.highlight {
+      color: var(--accent-cyan);
+    }
+
+    /* Grille 4x4 */
+    .board-wrapper {
+      background: var(--bg-card);
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      aspect-ratio: 1 / 1;
+      border: 2.5px solid #475569;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    .cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.5rem, 6vw, 2rem);
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.12s ease, transform 0.08s ease;
+      border-right: 1px dashed rgba(148, 163, 184, 0.25);
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
+    }
+
+    .cell:nth-child(4n) {
+      border-right: none;
+    }
+
+    .cell:nth-child(n + 13) {
+      border-bottom: none;
+    }
+
+    /* Bordures épaisses entre différentes cages */
+    .cage-top { border-top: 2.5px solid #cbd5e1 !important; }
+    .cage-bottom { border-bottom: 2.5px solid #cbd5e1 !important; }
+    .cage-left { border-left: 2.5px solid #cbd5e1 !important; }
+    .cage-right { border-right: 2.5px solid #cbd5e1 !important; }
+
+    /* Indice mathématique de la cage */
+    .cage-clue {
+      position: absolute;
+      top: 5px;
+      left: 7px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: rgba(15, 23, 42, 0.72);
+      pointer-events: none;
+    }
+
+    /* Touches colorées par cage */
+    .theme-0 { background-color: rgba(56, 189, 248, 0.11); }
+    .theme-0 .cage-clue { color: #7dd3fc; }
+
+    .theme-1 { background-color: rgba(167, 139, 250, 0.12); }
+    .theme-1 .cage-clue { color: #c4b5fd; }
+
+    .theme-2 { background-color: rgba(52, 211, 153, 0.11); }
+    .theme-2 .cage-clue { color: #6ee7b7; }
+
+    .theme-3 { background-color: rgba(251, 191, 36, 0.11); }
+    .theme-3 .cage-clue { color: #fcd34d; }
+
+    .theme-4 { background-color: rgba(251, 113, 133, 0.12); }
+    .theme-4 .cage-clue { color: #fda4af; }
+
+    /* États de sélection et validation */
+    .cell.related {
+      box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.04);
+    }
+
+    .cell.selected {
+      box-shadow: inset 0 0 0 3px var(--accent-cyan) !important;
+      background-color: rgba(56, 189, 248, 0.24) !important;
+      z-index: 2;
+    }
+
+    .cell.fixed {
+      color: var(--accent-emerald);
+    }
+
+    .cell.error {
+      color: var(--danger);
+      background-color: rgba(239, 68, 68, 0.2) !important;
+    }
+
+    .cell.cage-solved .cage-clue {
+      background: rgba(16, 185, 129, 0.25);
+      color: #6ee7b7;
+    }
+
+    /* Pavé numérique */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .num-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 14px 0;
+      border-radius: 12px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s, border-color 0.15s;
+    }
+
+    .num-btn:hover {
+      background: var(--bg-cell-hover);
+      border-color: var(--accent-cyan);
+    }
+
+    .num-btn:active {
+      transform: scale(0.95);
+    }
+
+    .num-btn.erase {
+      font-size: 0.9rem;
+      color: var(--accent-rose);
+    }
+
+    /* Boutons d'action */
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover:not(:disabled) {
+      border-color: var(--accent-purple);
+      background: var(--bg-cell-hover);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      border: none;
+      color: #fff;
+    }
+
+    .action-btn.primary:hover {
+      filter: brightness(1.1);
+    }
+
+    /* Message de statut */
+    .status-msg {
+      text-align: center;
+      font-size: 0.85rem;
+      min-height: 20px;
+      color: var(--text-muted);
+    }
+
+    /* Modales (Règles & Victoire) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 18, 0.82);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      max-width: 390px;
+      width: 100%;
+      padding: 22px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal h2 {
+      font-size: 1.25rem;
+      color: var(--accent-cyan);
+    }
+
+    .modal p, .modal li {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    .modal ul {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .victory-stats {
+      background: rgba(15, 23, 42, 0.7);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo-badge">4×</div>
+        <div>
+          <h1>SumGrid</h1>
+          <div class="subtitle">Logique & Calcul • 4×4</div>
+        </div>
+      </div>
+      <button class="btn-icon" id="btnRules">Règles</button>
+    </header>
+
+    <div class="stats-bar">
+      <div>
+        <div class="stat-label">Temps</div>
+        <div class="stat-value highlight" id="timerDisplay">00:00</div>
+      </div>
+      <div>
+        <div class="stat-label">Coups</div>
+        <div class="stat-value" id="movesDisplay">0</div>
+      </div>
+      <div>
+        <div class="stat-label">Record</div>
+        <div class="stat-value" id="bestDisplay">--:--</div>
+      </div>
+    </div>
+
+    <div class="board-wrapper">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">Sélectionnez une case et placez les chiffres 1 à 4.</div>
+
+    <div class="numpad">
+      <button class="num-btn" data-num="1">1</button>
+      <button class="num-btn" data-num="2">2</button>
+      <button class="num-btn" data-num="3">3</button>
+      <button class="num-btn" data-num="4">4</button>
+      <button class="num-btn erase" id="btnErase">Effacer</button>
+    </div>
+
+    <div class="actions">
+      <button class="action-btn" id="btnHint">Indice (2)</button>
+      <button class="action-btn primary" id="btnNew">Nouvelle grille</button>
+    </div>
+  </div>
+
+  <!-- Modale Règles -->
+  <div class="modal-backdrop" id="rulesModal">
+    <div class="modal">
+      <h2>Comment jouer à SumGrid ?</h2>
+      <ul>
+        <li>Remplissez chaque case avec un chiffre de <strong>1 à 4</strong>.</li>
+        <li><strong>Lignes et colonnes :</strong> chaque chiffre ne doit apparaître qu'une seule fois par ligne et par colonne.</li>
+        <li><strong>Zones colorées (cages) :</strong> les chiffres d'une même zone doivent produire le résultat indiqué en haut à gauche (ex. <code>7+</code> = somme égale à 7, <code>6×</code> = produit égal à 6, <code>2-</code> = différence de 2, <code>2÷</code> = quotient de 2).</li>
+      </ul>
+      <button class="action-btn primary" id="closeRules">Compris, jouer !</button>
+    </div>
+  </div>
+
+  <!-- Modale Victoire -->
+  <div class="modal-backdrop" id="victoryModal">
+    <div class="modal">
+      <h2 style="color: var(--accent-emerald);">Grille résolue !</h2>
+      <p id="victorySubtitle">Bravo, votre logique est implacable.</p>
+      <div class="victory-stats">
+        <div>
+          <div class="stat-label">Temps final</div>
+          <div class="stat-value highlight" id="finalTime">00:00</div>
+        </div>
+        <div>
+          <div class="stat-label">Coups joués</div>
+          <div class="stat-value" id="finalMoves">0</div>
+        </div>
+      </div>
+      <button class="action-btn" id="btnShare">Copier mon score</button>
+      <button class="action-btn primary" id="btnPlayAgain">Nouvelle grille</button>
+    </div>
+  </div>
+
+  <script>
+    const SIZE = 4;
+    let solution = [];
+    let userGrid = [];
+    let fixedCells = [];
+    let cages = [];
+    let cellToCage = [];
+    let selected = { r: 0, c: 0 };
+    let moves = 0;
+    let hintsLeft = 2;
+    let seconds = 0;
+    let timerInterval = null;
+    let gameWon = false;
+
+    const gridEl = document.getElementById("grid");
+    const timerEl = document.getElementById("timerDisplay");
+    const movesEl = document.getElementById("movesDisplay");
+    const bestEl = document.getElementById("bestDisplay");
+    const statusEl = document.getElementById("statusMsg");
+    const btnHint = document.getElementById("btnHint");
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    function loadBestTime() {
+      const best = localStorage.getItem("sumgrid_4x4_best");
+      bestEl.textContent = best ? formatTime(Number(best)) : "--:--";
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Génère un carré latin 4x4 valide aléatoire
+    function generateSolution() {
+      const base = [
+        [1, 2, 3, 4],
+        [2, 1, 4, 3],
+        [3, 4, 1, 2],
+        [4, 3, 2, 1]
+      ];
+      const rowOrder = shuffle([0, 1, 2, 3]);
+      const colOrder = shuffle([0, 1, 2, 3]);
+      const numMap = shuffle([1, 2, 3, 4]);
+
+      const board = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const val = base[rowOrder[r]][colOrder[c]];
+          board[r][c] = numMap[val - 1];
+        }
+      }
+      return board;
+    }
+
+    // Découpe la grille en cages de 1 à 3 cases et calcule l'indice
+    function generateCages(board) {
+      const visited = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+      const newCages = [];
+      const map = Array.from({ length: SIZE }, () => Array(SIZE).fill(-1));
+
+      const dirs = [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1]
+      ];
+
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (visited[r][c]) continue;
+
+          const cells = [{ r, c }];
+          visited[r][c] = true;
+          const targetSize = Math.random() < 0.15 ? 1 : (Math.random() < 0.7 ? 2 : 3);
+
+          while (cells.length < targetSize) {
+            const candidates = [];
+            for (const cell of cells) {
+              for (const [dr, dc] of dirs) {
+                const nr = cell.r + dr;
+                const nc = cell.c + dc;
+                if (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && !visited[nr][nc]) {
+                  candidates.push({ r: nr, c: nc });
+                }
+              }
+            }
+            if (candidates.length === 0) break;
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            visited[pick.r][pick.c] = true;
+            cells.push(pick);
+          }
+
+          // Trier les cellules pour placer l'indice en haut à gauche de la cage
+          cells.sort((a, b) => (a.r - b.r) || (a.c - b.c));
+          const values = cells.map(cell => board[cell.r][cell.c]);
+          const clueObj = buildClue(values);
+
+          const cageIndex = newCages.length;
+          cells.forEach(cell => {
+            map[cell.r][cell.c] = cageIndex;
+          });
+
+          newCages.push({
+            id: cageIndex,
+            cells,
+            clue: clueObj.label,
+            op: clueObj.op,
+            target: clueObj.target,
+            theme: cageIndex % 5
+          });
+        }
+      }
+
+      return { newCages, map };
+    }
+
+    function buildClue(values) {
+      if (values.length === 1) {
+        return { label: `${values[0]}`, op: "=", target: values[0] };
+      }
+      if (values.length === 2) {
+        const [a, b] = values;
+        const max = Math.max(a, b);
+        const min = Math.min(a, b);
+        const choices = ["+", "×", "-"];
+        if (max % min === 0 && min > 1) choices.push("÷");
+        const op = choices[Math.floor(Math.random() * choices.length)];
+        if (op === "+") return { label: `${a + b}+`, op: "+", target: a + b };
+        if (op === "×") return { label: `${a * b}×`, op: "×", target: a * b };
+        if (op === "-") return { label: `${max - min}-`, op: "-", target: max - min };
+        if (op === "÷") return { label: `${max / min}÷`, op: "÷", target: max / min };
+      }
+      const sum = values.reduce((acc, v) => acc + v, 0);
+      const prod = values.reduce((acc, v) => acc * v, 1);
+      if (Math.random() < 0.65) {
+        return { label: `${sum}+`, op: "+", target: sum };
+      }
+      return { label: `${prod}×`, op: "×", target: prod };
+    }
+
+    function isCageSatisfied(cage) {
+      const vals = cage.cells.map(cell => userGrid[cell.r][cell.c]);
+      if (vals.some(v => v === 0)) return false;
+
+      if (cage.op === "=") return vals[0] === cage.target;
+      if (cage.op === "+") return vals.reduce((a, b) => a + b, 0) === cage.target;
+      if (cage.op === "×") return vals.reduce((a, b) => a * b, 1) === cage.target;
+      if (cage.op === "-") return Math.abs(vals[0] - vals[1]) === cage.target;
+      if (cage.op === "÷") {
+        const max = Math.max(vals[0], vals[1]);
+        const min = Math.min(vals[0], vals[1]);
+        return min !== 0 && max / min === cage.target;
+      }
+      return false;
+    }
+
+    function hasLineOrColDuplicate(r, c) {
+      const val = userGrid[r][c];
+      if (val === 0) return false;
+      for (let i = 0; i < SIZE; i++) {
+        if (i !== c && userGrid[r][i] === val) return true;
+        if (i !== r && userGrid[i][c] === val) return true;
+      }
+      return false;
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const cellDiv = document.createElement("div");
+          const cageIdx = cellToCage[r][c];
+          const cage = cages[cageIdx];
+          cellDiv.className = `cell theme-${cage.theme}`;
+
+          // Bordures de cage
+          if (r === 0 || cellToCage[r - 1][c] !== cageIdx) cellDiv.classList.add("cage-top");
+          if (r === SIZE - 1 || cellToCage[r + 1][c] !== cageIdx) cellDiv.classList.add("cage-bottom");
+          if (c === 0 || cellToCage[r][c - 1] !== cageIdx) cellDiv.classList.add("cage-left");
+          if (c === SIZE - 1 || cellToCage[r][c + 1] !== cageIdx) cellDiv.classList.add("cage-right");
+
+          // Indice dans la première cellule de la cage
+          if (cage.cells[0].r === r && cage.cells[0].c === c) {
+            const clueSpan = document.createElement("span");
+            clueSpan.className = "cage-clue";
+            clueSpan.textContent = cage.clue;
+            cellDiv.appendChild(clueSpan);
+          }
+
+          if (isCageSatisfied(cage)) {
+            cellDiv.classList.add("cage-solved");
+          }
+
+          if (r === selected.r && c === selected.c) {
+            cellDiv.classList.add("selected");
+          } else if (r === selected.r || c === selected.c) {
+            cellDiv.classList.add("related");
+          }
+
+          if (fixedCells[r][c]) {
+            cellDiv.classList.add("fixed");
+          }
+
+          if (hasLineOrColDuplicate(r, c)) {
+            cellDiv.classList.add("error");
+          }
+
+          const val = userGrid[r][c];
+          if (val !== 0) {
+            const valNode = document.createTextNode(val);
+            cellDiv.appendChild(valNode);
+          }
+
+          cellDiv.addEventListener("click", () => {
+            selected = { r, c };
+            renderGrid();
+          });
+
+          gridEl.appendChild(cellDiv);
+        }
+      }
+    }
+
+    function setCellValue(num) {
+      if (gameWon) return;
+      const { r, c } = selected;
+      if (fixedCells[r][c]) {
+        statusEl.textContent = "Cette case est verrouillée par un indice.";
+        return;
+      }
+      if (userGrid[r][c] !== num) {
+        userGrid[r][c] = num;
+        moves++;
+        movesEl.textContent = moves;
+      }
+      statusEl.textContent = "";
+      renderGrid();
+      checkVictory();
+    }
+
+    function checkVictory() {
+      // Vérifie que toutes les cases sont remplies, sans doublons, et toutes les cages valides
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (userGrid[r][c] === 0 || hasLineOrColDuplicate(r, c)) return;
+        }
+      }
+      if (!cages.every(isCageSatisfied)) return;
+
+      gameWon = true;
+      clearInterval(timerInterval);
+
+      const prevBest = localStorage.getItem("sumgrid_4x4_best");
+      let subtitle = "Bravo, votre logique est implacable.";
+      if (!prevBest || seconds < Number(prevBest)) {
+        localStorage.setItem("sumgrid_4x4_best", String(seconds));
+        loadBestTime();
+        subtitle = "Nouveau record personnel !";
+      }
+
+      document.getElementById("victorySubtitle").textContent = subtitle;
+      document.getElementById("finalTime").textContent = formatTime(seconds);
+      document.getElementById("finalMoves").textContent = moves;
+      document.getElementById("victoryModal").classList.add("open");
+    }
+
+    function useHint() {
+      if (gameWon || hintsLeft <= 0) return;
+      const candidates = [];
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (userGrid[r][c] !== solution[r][c]) {
+            candidates.push({ r, c });
+          }
+        }
+      }
+      if (candidates.length === 0) return;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      userGrid[pick.r][pick.c] = solution[pick.r][pick.c];
+      fixedCells[pick.r][pick.c] = true;
+      selected = { r: pick.r, c: pick.c };
+      hintsLeft--;
+      btnHint.textContent = `Indice (${hintsLeft})`;
+      if (hintsLeft === 0) btnHint.disabled = true;
+      statusEl.textContent = "Indice appliqué !";
+      renderGrid();
+      checkVictory();
+    }
+
+    function startNewGame() {
+      clearInterval(timerInterval);
+      solution = generateSolution();
+      userGrid = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+      fixedCells = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+
+      const generated = generateCages(solution);
+      cages = generated.newCages;
+      cellToCage = generated.map;
+
+      // Pré-remplit automatiquement les cages d'une seule case pour un démarrage fluide
+      cages.forEach(cage => {
+        if (cage.cells.length === 1) {
+          const { r, c } = cage.cells[0];
+          userGrid[r][c] = solution[r][c];
+          fixedCells[r][c] = true;
+        }
+      });
+
+      selected = { r: 0, c: 0 };
+      moves = 0;
+      hintsLeft = 2;
+      seconds = 0;
+      gameWon = false;
+
+      movesEl.textContent = "0";
+      timerEl.textContent = "00:00";
+      btnHint.textContent = "Indice (2)";
+      btnHint.disabled = false;
+      statusEl.textContent = "Sélectionnez une case et placez les chiffres 1 à 4.";
+      document.getElementById("victoryModal").classList.remove("open");
+
+      renderGrid();
+      timerInterval = setInterval(() => {
+        seconds++;
+        timerEl.textContent = formatTime(seconds);
+      }, 1000);
+    }
+
+    // Événements pavé numérique et boutons
+    document.querySelectorAll(".num-btn[data-num]").forEach(btn => {
+      btn.addEventListener("click", () => setCellValue(Number(btn.dataset.num)));
+    });
+    document.getElementById("btnErase").addEventListener("click", () => setCellValue(0));
+    document.getElementById("btnHint").addEventListener("click", useHint);
+    document.getElementById("btnNew").addEventListener("click", startNewGame);
+    document.getElementById("btnPlayAgain").addEventListener("click", startNewGame);
+
+    // Modale règles
+    document.getElementById("btnRules").addEventListener("click", () => {
+      document.getElementById("rulesModal").classList.add("open");
+    });
+    document.getElementById("closeRules").addEventListener("click", () => {
+      document.getElementById("rulesModal").classList.remove("open");
+    });
+
+    // Partage du score
+    document.getElementById("btnShare").addEventListener("click", async () => {
+      const text = `SumGrid 4×4 résolu en ${formatTime(seconds)} (${moves} coups) !`;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("btnShare").textContent = "Score copié !";
+        setTimeout(() => {
+          document.getElementById("btnShare").textContent = "Copier mon score";
+        }, 2000);
+      } catch {
+        alert(text);
+      }
+    });
+
+    // Contrôles clavier
+    document.addEventListener("keydown", e => {
+      if (["1", "2", "3", "4"].includes(e.key)) {
+        setCellValue(Number(e.key));
+      } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
+        setCellValue(0);
+      } else if (e.key === "ArrowUp") {
+        selected.r = (selected.r + SIZE - 1) % SIZE;
+        renderGrid();
+      } else if (e.key === "ArrowDown") {
+        selected.r = (selected.r + 1) % SIZE;
+        renderGrid();
+      } else if (e.key === "ArrowLeft") {
+        selected.c = (selected.c + SIZE - 1) % SIZE;
+        renderGrid();
+      } else if (e.key === "ArrowRight") {
+        selected.c = (selected.c + 1) % SIZE;
+        renderGrid();
+      }
+    });
+
+    loadBestTime();
+    startNewGame();
+  </script>
+</body>
+</html>
